@@ -1,0 +1,11 @@
+
+IN-PROGRESS - NEW LOCATION
+
+Work out build/state recursion problem
+Play with UI
+Add images
+
+Profiles - outfit padding preference
+Ranges - 8+: no jacket, no headphones
+Fly - compare climates and outfits
+Wardrobe - add available outfit, compare against ideal
