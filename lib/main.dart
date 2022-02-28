@@ -1,24 +1,22 @@
-import 'dart:collection';
-
-//import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:weather/weather.dart';
-import 'package:geocoder/geocoder.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'climate.dart';
-import 'location.dart';
 
-void main() => runApp(Home());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await DotEnv().load('.env');
+  runApp(Main());
+}
 
-class Home extends StatelessWidget {
+class Main extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Airfeel',
       theme: ThemeData(
-        primaryColor: Colors.red,
-        backgroundColor: Colors.white,
-        canvasColor: Colors.orange,
+        primaryColor: Colors.red[900],
+        backgroundColor: Colors.red[900],
+        canvasColor: Colors.white,
+        dividerColor: Colors.transparent,
       ),
       home: Climate(),
     );

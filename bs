@@ -1,7 +1,4 @@
 
-IN-PROGRESS - NEW LOCATION
-
-Work out build/state recursion problem
 Play with UI
 Add images
 

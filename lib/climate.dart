@@ -1,17 +1,20 @@
-import 'dart:collection';
-
 //import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:weather/weather.dart';
-import 'package:geocoder/geocoder.dart';
+import 'package:geocoding/geocoding.dart';
+//import 'package:flutter_typeahead/flutter_typeahead.dart';
 
-import 'location.dart';
+import 'place.dart';
+import 'helper.dart';
+import 'searcher.dart';
+import 'loading.dart';
+import 'wardrobe.dart';
+import 'profile.dart';
 
 class Climate extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    // need one more of these
+    // Need one more of these
     return ClimateState();
   }
 }
@@ -25,11 +28,11 @@ class ClimateState extends State<Climate> {
   String place;
   var outfit;
 
-  // forecasting
+  // Forecasting
   Map<int, int> forecastHalfDay;
   List<int> hours;
 
-  // new climate
+  // New climate
   List<int> newHours;
   String rawText;
   String newLocation;
@@ -37,6 +40,15 @@ class ClimateState extends State<Climate> {
   int newCelsius;
   Map<int, int> newForecast;
   var newOutfit;
+
+  // New location
+  String currPlace;
+  String placeText;
+
+  // Bar navigation
+  PageIdx _currentPage = PageIdx.feel;
+  List<Widget> _pages = <Widget>[];
+
 
   static const clothing = [
     'T-shirt',
@@ -62,8 +74,10 @@ class ClimateState extends State<Climate> {
       _getWeatherAdvice();
     }
     return Scaffold(
+      //backgroundColor: Colors.red[900],
       appBar: AppBar(
         title: Text("Airfeel", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red[900],
         centerTitle: true,
         actions: <Widget>[
           IconButton(
@@ -79,128 +93,107 @@ class ClimateState extends State<Climate> {
           )
         ],
       ),
-      body: SingleChildScrollView(
+      body: _getBody(),              
+      persistentFooterButtons: [
+        //if (this.celsius != null && _currentPage == PageIdx.feel)
+        if (_currentPage == PageIdx.feel)
+          TextField(
+            textAlign: TextAlign.center,
+            onTap: () {
+              _getText();
+            },
+            readOnly: true,
+            cursorColor: Colors.red[900],
+            style: TextStyle(
+              color: Colors.red[900],
+              decorationColor: Colors.red[900],
+            ),
+            decoration: InputDecoration(
+              hintText: "Where are you going?",
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red[900], width: 0.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red[900], width: 0.0),
+              ),
+            ),
+          ),
+      ],
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (idx) {
+          _onItemTapped(idx);
+        },
+        items: [
+          BottomNavigationBarItem(label: 'Profile', icon: Icon(Icons.person)),
+          BottomNavigationBarItem(label: 'Feel', icon: Icon(Icons.air)),
+          BottomNavigationBarItem(label: 'Wardrobe', icon: Icon(Icons.table_rows))
+        ],
+        currentIndex: _currentPage.index,
+        fixedColor: Colors.red[900],
+      ),
+    );
+  }
+
+  _getBody() {
+    if (this.celsius == null)
+      return Loading();
+    else {
+      return SingleChildScrollView(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // if the current location is available
-            this.celsius != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "${this.celsius}°",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 120),
-                            ),
-                            Column(children: [
-                              Text(
-                                  "${hours[1]}: ${forecastHalfDay[hours[1]]}°"),
-                              Text(
-                                  "${hours[2]}: ${forecastHalfDay[hours[2]]}°"),
-                              Text(
-                                  "${hours[3]}: ${forecastHalfDay[hours[3]]}°"),
-                              Text(
-                                  "${hours[4]}: ${forecastHalfDay[hours[4]]}°"),
-                              Text(
-                                  "${hours[5]}: ${forecastHalfDay[hours[5]]}°"),
-                            ]),
-                            if (this.place != null)
-                              Text("${this.place}",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 32)),
-                            if (this.outfit != null &&
-                                this.forecastHalfDay != null)
-                              Column(
-                                children: [
-                                  //for (Image piece in this.outfit) piece,
-                                  if (this.outfit.contains('Beanie'))
-                                    Image.asset('images/beanie.png',
-                                        width: 50, height: 50),
-                                  //if (this.outfit.contains('Headphones')) removed until wardrobe is implemented
-                                    //Image.asset('images/headphones.png',
-                                        //width: 50, height: 50),
-                                  if (this.outfit.contains('Jacket'))
-                                    Image.asset('images/jacket.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Hoodie'))
-                                    Image.asset('images/hoodie.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('T-shirt'))
-                                    Image.asset('images/t-shirt.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Underlayer'))
-                                    Image.asset('images/underlayer.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Pants'))
-                                    Image.asset('images/pants.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Shorts'))
-                                    Image.asset('images/shorts.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Thick socks'))
-                                    Image.asset('images/thicksocks.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Sneakers'))
-                                    Image.asset('images/sneakers.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Boots'))
-                                    Image.asset('images/boots.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Gloves'))
-                                    Image.asset('images/gloves.png',
-                                        width: 50, height: 50),
-                                  if (this.outfit.contains('Scarf'))
-                                    Image.asset('images/scarf.png',
-                                        width: 50, height: 50),
-                                ],
-                                //shrinkWrap: true,
-                              ),
-                          ]),
-
-                      // comparison location is available
-                      if (this.newLocation != null)
-                        Location(
-                            celsius: this.newCelsius,
-                            name: this.fineText,
-                            outfit: this.newOutfit,
-                            forecast: this.newForecast,
-                            hours: this.newHours
-                        )
-                    ],
-                  )
-                // if not available, display loading screen
-                : CircularProgressIndicator(),
-
-            // display comparison textfield if current location is available
-            if (this.celsius != null)
-              TextField(
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(hintText: 'Where are you going?'),
-                onSubmitted: (text) {
-                  _findNewLocation(text);
-                  _getWeatherAdvice();
-                },
+            if (this.celsius != null && _currentPage == PageIdx.feel)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Place(
+                    celsius: this.celsius,
+                    name: this.place,
+                    outfit: this.outfit,
+                    forecast: this.forecastHalfDay,
+                    hours: this.hours,
+                  ),
+                  // comparison location is available
+                  if (this.newLocation != null)
+                    Place(
+                        celsius: this.newCelsius,
+                        name: this.fineText,
+                        outfit: this.newOutfit,
+                        forecast: this.newForecast,
+                        hours: this.newHours
+                    )
+                ],
               ),
-            //if (this.newLocation != null) Location(celsius: this.newCelsius),
+
+            if (this.celsius == null && _currentPage == PageIdx.feel)
+              Loading(),
+
+            if (_currentPage == PageIdx.wardrobe)
+                Wardrobe(),
+            if (_currentPage == PageIdx.profile)
+                Profile(),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(label: 'Profile', icon: Icon(Icons.home)),
-          BottomNavigationBarItem(label: 'Feel', icon: Icon(Icons.home)),
-          BottomNavigationBarItem(label: 'Wardrobe', icon: Icon(Icons.home))
-        ],
-        currentIndex: 1,
-      ),
-    );
+      );
+    }
+  }
+
+
+  _onItemTapped(idx) {
+    setState(() {
+      _currentPage = PageIdx.values[idx];
+    });
+  }
+
+  _getText() async {
+    placeText = await Navigator.push(context, MaterialPageRoute(
+                        builder: (context) => Searcher()
+                      ));
+    _findNewLocation(placeText);
+    //_getWeatherAdvice();
   }
 
   _findNewLocation(String location) async {
@@ -235,20 +228,22 @@ class ClimateState extends State<Climate> {
     */
   }
 
+  
+
   _getWeatherAdvice({base = true, position}) async {
     Weather cw;
     List<Weather> fc;
     if (position == null) {
-      position = await _determinePosition();
+      position = await determinePosition();
       latitude = position.latitude;
       longitude = position.longitude;
       cw = await wf.currentWeatherByLocation(latitude, longitude);
       fc = await wf.fiveDayForecastByLocation(latitude, longitude);
       final coordinates = new Coordinates(latitude, longitude);
-      var addresses =
-          await Geocoder.local.findAddressesFromCoordinates(coordinates);
+      List<Placemark> addresses =
+          await placemarkFromCoordinates(latitude, longitude);
       var first = addresses.first;
-      this.place = first.adminArea;
+      this.place = first.administrativeArea;
     } else {
       cw = await wf.currentWeatherByCityName(position);
       fc = await wf.fiveDayForecastByCityName(position);
@@ -380,41 +375,5 @@ class ClimateState extends State<Climate> {
 
     return outfit;
   }
-
-  Future<Position> _determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Test if location services are enabled.
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.deniedForever) {
-        // Permissions are denied forever, handle appropriately.
-        return Future.error(
-            'Location permissions are permanently denied, we cannot request permissions.');
-      }
-
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    return await Geolocator.getCurrentPosition();
-  }
 }
+
