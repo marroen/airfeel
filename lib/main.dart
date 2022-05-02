@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'climate.dart';
 import 'feel.dart';
 
+// App launcher
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await DotEnv().load('.env');

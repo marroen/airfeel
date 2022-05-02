@@ -12,7 +12,7 @@ import 'loading.dart';
 import 'wardrobe.dart';
 import 'profile.dart';
 
-
+// Main page of the app
 class Feel extends StatefulWidget {
 
   @override

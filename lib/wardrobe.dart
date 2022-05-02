@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'helper.dart';
 
+// Page for wardrobe func.
 class Wardrobe extends StatefulWidget {
   State<StatefulWidget> createState () {
     return WardrobeState();

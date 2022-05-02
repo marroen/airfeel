@@ -8,6 +8,7 @@ enum Profile {
   warm,
 }
 
+// Page for selecting ideal profile of the user
 class ProfilePage extends StatefulWidget {
 
   State<StatefulWidget> createState () {
