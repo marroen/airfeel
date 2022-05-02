@@ -15,7 +15,7 @@ class LoadingState extends State<Loading> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(),
-          Text("Loading awesome features.."),
+          //Text("Loading awesome features.."),
         ]
       ),
     );

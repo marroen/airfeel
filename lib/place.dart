@@ -8,24 +8,21 @@ import 'package:weather/weather.dart';
 import 'package:geocoding/geocoding.dart';
 
 import 'climate.dart';
-import 'main.dart';
+import 'profile.dart';
+import 'loading.dart';
+import 'helper.dart';
 
+class Replace extends Notification {
+  final String location;
+  const Replace({this.location});
+}
 
 class Place extends StatefulWidget {
-  final int celsius;
-  final String name;
-  final Set<String> outfit;
-  final Map<int, int> forecast;
-  final List<int> hours;
+  final String rawText;
+  final Profile profile;
+  final Stream stream;
 
-  const Place(
-      {Key key,
-      this.celsius,
-      this.name,
-      this.outfit,
-      this.forecast,
-      this.hours})
-      : super(key: key);
+  const Place({Key key, this.rawText, this.profile, this.stream}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -36,70 +33,119 @@ class Place extends StatefulWidget {
 
 
 class PlaceState extends State<Place> {
+
+  // Profile
+  Profile profile;//Profile.standard;
+
+  // Base climate - should be in Place
+  Climate climate;
+  bool createdClimate = false;
+
+  // Ensure climate is loaded before displaying to feel-page.
+  void initState() {
+    super.initState();
+    profile = widget.profile;
+    widget.stream.listen(updateClimate);
+    () async {
+      // Base climate
+      if (widget.rawText == "") {
+        climate = Climate();
+        await climate.getWeatherAdvice(widget.rawText, profile);
+      // New climate
+      } else {
+        climate = Climate.newLocation(trimName(widget.rawText));
+        await climate.getWeatherAdvice(widget.rawText, profile);
+      }
+      if (this.mounted) setState(() {
+        createdClimate = true;
+      });
+    } ();
+  }
+
+  // Method called on every sink
+  updateClimate(location) {
+    print(location);
+
+    () async {
+      Climate newClimate = Climate.newLocation(trimName(location));
+      await newClimate.getWeatherAdvice(location, profile);
+      if (this.mounted) setState(() {
+        climate = newClimate;
+      });
+    } ();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            _getText(),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 100),
-          ),
-        ),
-        Column(
-          children: [
-            Text("${widget.hours[1]}: ${widget.forecast[widget.hours[1]]}°"),
-            Text("${widget.hours[2]}: ${widget.forecast[widget.hours[2]]}°"),
-            Text("${widget.hours[3]}: ${widget.forecast[widget.hours[3]]}°"),
-            Text("${widget.hours[4]}: ${widget.forecast[widget.hours[4]]}°"),
-            Text("${widget.hours[5]}: ${widget.forecast[widget.hours[5]]}°")
-          ],
-        ),
-        Text("${widget.name}",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
-        if (widget.outfit != null)
-          Column(
-            children: [
-              //for (Image piece in this.outfit) piece,
-              if (widget.outfit.contains('Beanie'))
-                Image.asset('images/beanie.png', width: 50, height: 50),
-              //if (widget.outfit.contains('Headphones'))
-                //Image.asset('images/headphones.png', width: 50, height: 50), removed until wardrobe is implemented
-              if (widget.outfit.contains('Jacket'))
-                Image.asset('images/jacket.png', width: 50, height: 50),
-              if (widget.outfit.contains('Hoodie'))
-                Image.asset('images/hoodie.png', width: 50, height: 50),
-              if (widget.outfit.contains('T-shirt'))
-                Image.asset('images/t-shirt.png', width: 50, height: 50),
-              if (widget.outfit.contains('Underlayer'))
-                Image.asset('images/underlayer.png', width: 50, height: 50),
-              if (widget.outfit.contains('Pants'))
-                Image.asset('images/pants.png', width: 50, height: 50),
-              if (widget.outfit.contains('Shorts'))
-                Image.asset('images/shorts.png', width: 50, height: 50),
-              if (widget.outfit.contains('Thick socks'))
-                Image.asset('images/thicksocks.png', width: 50, height: 50),
-              if (widget.outfit.contains('Sneakers'))
-                Image.asset('images/sneakers.png', width: 50, height: 50),
-              if (widget.outfit.contains('Boots'))
-                Image.asset('images/boots.png', width: 50, height: 50),
-              if (widget.outfit.contains('Gloves'))
-                Image.asset('images/gloves.png', width: 50, height: 50),
-              if (widget.outfit.contains('Scarf'))
-                Image.asset('images/scarf.png', width: 50, height: 50),
-            ],
-            //shrinkWrap: true,
-          ),
-    ]);
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: _getPlace(),
+    );
   }
 
-  _getText() {
-    if (widget.celsius < 10 && widget.celsius > 0)
-      return "${widget.celsius}°";
-    else
-      return "${widget.celsius}°";
+  /* --- Build helper methods --- */
+
+  _getPlace() {
+    if (createdClimate == false)
+      return [Loading()];
+    else {
+      return [FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          _getCelsius(),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 100),
+        ),
+      ),
+      Column(
+        children: presentForecast(),
+      ),
+      Text("${climate.fineText}",
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 32)),
+      if (climate.outfit != null)
+        Column(
+          children: presentOutfit(),
+        ),
+      ];
+    }
   }
+
+  _getCelsius() {
+    if (climate.celsius < 10 && climate.celsius > 0)
+      return "${climate.celsius}°";
+    else
+      return "${climate.celsius}°";
+  }
+
+
+  List<TextButton> presentForecast() {
+    List<TextButton> texts = [];
+    for (var hourDegree in climate.forecastHalfDay.entries) {;
+      TextButton text = TextButton(
+        child: Text("${hourDegree.key}: ${hourDegree.value}°"),
+        style: TextButton.styleFrom(
+          primary: Colors.black,
+          textStyle: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        onPressed: () {
+          /*
+          setState(() {
+          });*/
+        },
+      );
+      
+      texts.add(text);
+    }
+    return texts;
+  }
+
+  List<Image> presentOutfit() {
+    List<Image> images = [];
+    for (var piece in climate.outfit) {
+      images.add(Image.asset('images/${piece.toLowerCase()}.png', width: 50, height: 50));
+    }
+    //Image.asset('images/scarf.png', width: 50, height: 50);
+    return images;
+  }
+
 }

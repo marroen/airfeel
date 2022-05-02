@@ -1,68 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:geolocator/geolocator.dart';
 
-enum PageIdx {
-  profile,
-  feel,
-  wardrobe
-}
-
-class Coordinates {
-  double lat;
-  double long;
-    Coordinates(lat, long) {
-      this.lat = lat;
-      this.long = long;
-    }
-}
-
-class AppDropdownInput<T> extends StatelessWidget {
-  final String hintText;
-  final List<T> options;
-  final T value;
-  final String Function(T) getLabel;
-  final void Function(T) onChanged;
-
-  AppDropdownInput({
-    this.hintText = 'Please select an Option',
-    this.options = const [],
-    this.getLabel,
-    this.value,
-    this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return FormField<T>(
-      builder: (FormFieldState<T> state) {
-        return InputDecorator(
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(
-                horizontal: 20.0, vertical: 15.0),
-            labelText: hintText,
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
-          ),
-          isEmpty: value == null || value == '',
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<T>(
-              value: value,
-              isDense: true,
-              onChanged: onChanged,
-              items: options.map((T value) {
-                return DropdownMenuItem<T>(
-                  value: value,
-                  child: Text(getLabel(value)),
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
 
 Future<Position> determinePosition() async {
   bool serviceEnabled;
@@ -99,4 +37,22 @@ Future<Position> determinePosition() async {
   // When we reach here, permissions are granted and we can
   // continue accessing the position of the device.
   return await Geolocator.getCurrentPosition();
+}
+
+String trimName(String name) {
+  name =
+        name[0].toUpperCase() + name.substring(1, name.length);
+
+    // spacing magic
+    if (name.contains(' ')) {
+      for (int i = 0; i < name.length; i++) {
+        if (name[i] == ' ') {
+          name = name.substring(0, i + 1) +
+              name[i + 1].toUpperCase() +
+              '.';
+              //location.substring(i + 2, location.length);
+        }
+      }
+    }
+  return name;
 }

@@ -1,3 +1,7 @@
+TODO
+[X] Put climate.dart in a feel.dart
+[ ] Create +- 3 celsius profiles
+[ ] Folderize the project (Pages/Helpers/Func)
 
 Play with UI
 Add images

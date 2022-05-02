@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'climate.dart';
+import 'feel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +19,7 @@ class Main extends StatelessWidget {
         canvasColor: Colors.white,
         dividerColor: Colors.transparent,
       ),
-      home: Climate(),
+      home: Feel(),
     );
   }
 }

@@ -158,6 +158,8 @@ class SearcherState extends State<Searcher> {
       ),
     );
   }
+
+  /* --- Build helper methods --- */
   
   void autoCompleteSearch(String value) async {
     var result = await googlePlace.queryAutocomplete.get(value);
