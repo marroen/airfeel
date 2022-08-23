@@ -31,6 +31,12 @@
 .pub/
 /build/
 
+# Project specific
+*.env
+*city.list.json
+*city.list.json.gz
+*city_list.data.sql
+
 # Web related
 lib/generated_plugin_registrant.dart
 

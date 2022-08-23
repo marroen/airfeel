@@ -1,7 +1,10 @@
 TODO
 [X] Put climate.dart in a feel.dart
 [ ] Create +- 3 celsius profiles
-[ ] Folderize the project (Pages/Helpers/Func)
+[X] Folderize the project (Pages/Helpers/Func)
+[ ] Start Wardrobe project
+[ ] Create session to create base location
+[ ] Make Climate JSON-able
 
 Play with UI
 Add images

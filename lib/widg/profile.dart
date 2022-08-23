@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'structure.dart';
-import 'helper.dart';
+
+import '../func/structure.dart';
+import '../help/helper.dart';
 
 enum Profile {
   lean,

@@ -12,7 +12,6 @@ class Searcher extends StatefulWidget {
 }
 
 class SearcherState extends State<Searcher> {
-  List<String> allPlaces = ["barcelona", "lisbon", "absurofurorgnukkk"];
   List<AutocompletePrediction> predictions = [];
   GooglePlace googlePlace;
 
@@ -43,6 +42,7 @@ class SearcherState extends State<Searcher> {
               ),
               onChanged: (value) {
                 if (value.isNotEmpty) {
+                  print("value in searcher: $value");
                   autoCompleteSearch(value);
                 } else {
                   if (predictions.length > 0 && mounted) {

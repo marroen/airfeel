@@ -1,12 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:fpdart/fpdart.dart' as fp;
 import 'package:weather/weather.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_session_manager/flutter_session_manager.dart';
+import 'package:localstorage/localstorage.dart';
 
-import 'climate.dart';
+//import '../func/climate.dart';
+import '../func/climate2.dart';
+import '../func/structure.dart';
+import '../help/helper.dart';
 import 'place.dart';
-import 'structure.dart';
-import 'helper.dart';
 import 'searcher.dart';
 import 'loading.dart';
 import 'wardrobe.dart';
@@ -14,6 +18,7 @@ import 'profile.dart';
 
 // Main page of the app
 class Feel extends StatefulWidget {
+  //final LocalStorage storage = new LocalStorage('key');
 
   @override
   State<StatefulWidget> createState() => FeelState();
@@ -21,8 +26,14 @@ class Feel extends StatefulWidget {
 
 class FeelState extends State<Feel> {
 
+  // Session
+  var session = SessionManager();
+
   // Profile
   Profile profile = Profile.standard;
+
+  // WeatherFactory
+  WeatherFactory wf = WeatherFactory("30c0c86d9b62ce5e1086a153201296a8");
 
   // New climate
   List<int> newHours;
@@ -50,6 +61,9 @@ class FeelState extends State<Feel> {
   List<Place> places = [];
   final int maxPlaces = 2;
 
+  final LocalStorage baseStorage = LocalStorage('base');
+  final LocalStorage newStorage = LocalStorage('new');
+
   // Stream logic
   StreamController<String> baseCtrl;
   StreamController<String> newCtrl;
@@ -59,8 +73,11 @@ class FeelState extends State<Feel> {
     super.initState();
     baseCtrl = StreamController.broadcast();
     newCtrl = StreamController.broadcast();
+    baseStorage.dispose();
+    newStorage.dispose();
     if (this.mounted) setState(() {
-      place = Place(rawText: "", profile: profile, stream: baseCtrl.stream);
+      place = Place(rawText: fp.none(), profile: profile, stream: baseCtrl.stream,
+                    storage: baseStorage);
       places.add(place);
       createdPlace = true;
     });
@@ -88,9 +105,10 @@ class FeelState extends State<Feel> {
             onPressed: () {
               print("Reloading...");
               print("Weather feels like: ");
-              place = Place(rawText: place.rawText, profile: profile);
+              place = Place(rawText: place.rawText, profile: profile, storage: baseStorage);
               if (createdNewPlace) {
-                newPlace = Place(rawText: newPlace.rawText, profile: profile);
+                newPlace = Place(rawText: newPlace.rawText, profile: profile,
+                                 storage: newStorage);
               }
             },
           )
@@ -145,10 +163,12 @@ class FeelState extends State<Feel> {
       builder: (context) => ProfilePage()
     ));
     if (oldProfile != profile) {
-      place = Place(rawText: place.rawText, profile: profile);
-      if (createdNewPlace) { newPlace = Place(rawText: newPlace.rawText, profile: profile); }
+      place = Place(rawText: place.rawText, profile: profile, storage: baseStorage);
+      if (createdNewPlace) {
+        newPlace = Place(rawText: newPlace.rawText, profile: profile, storage: newStorage);
+      }
     }
-  }
+  } 
 
   _getBody() {
     if (_currentPage == PageIdx.feel) {
@@ -167,7 +187,7 @@ class FeelState extends State<Feel> {
       );
     } else if (_currentPage == PageIdx.wardrobe) {
       return Wardrobe();
-    }
+    } 
   } 
 
 
@@ -182,8 +202,11 @@ class FeelState extends State<Feel> {
                         builder: (context) => Searcher()
                       ));
 
+    print("placeText after searcher: $placeText");
     if (places.length < maxPlaces) {
-      newPlace = Place(rawText: placeText, profile: profile, stream: newCtrl.stream);
+      await newStorage.setItem('climate', await Climate2.create(wf, fp.some(placeText)));
+      newPlace = Place(rawText: fp.some(placeText), profile: profile, stream: newCtrl.stream,
+                       storage: newStorage);
       places.add(newPlace);
     } else { newCtrl.sink.add(placeText); }
     setState(() {
